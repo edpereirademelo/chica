@@ -14,6 +14,9 @@ import {
   Building2,
   Receipt,
   Percent,
+  Lock,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -28,7 +31,7 @@ import {
   Pie,
   Cell,
 } from 'recharts'
-import { Card, Badge, PageHeader } from '../components/ui'
+import { Card, Badge, Button, PageHeader } from '../components/ui'
 import { brl, cx } from '../lib/format'
 import {
   periodOptions,
@@ -40,6 +43,12 @@ import {
   type PeriodId,
   type PayableStatus,
 } from '../data/finance'
+
+// Senha provisória da área financeira.
+// ATENÇÃO: protótipo client-side — esta senha fica visível no código/bundle e
+// NÃO é uma proteção real. Serve apenas como tela de bloqueio da demonstração.
+const FINANCE_PASSWORD = 'Miguel26$'
+const UNLOCK_KEY = 'chica-fin-unlocked'
 
 const COLORS = {
   entradas: '#5B7B4A',
@@ -87,7 +96,7 @@ function Kpi({
   )
 }
 
-export function Financeiro() {
+function FinanceiroContent() {
   const [period, setPeriod] = useState<PeriodId>('mes')
   const data = financeByPeriod[period]
 
@@ -426,4 +435,93 @@ export function Financeiro() {
       </div>
     </div>
   )
+}
+
+// ---------- Tela de bloqueio por senha ----------
+function FinanceiroLock({ onUnlock }: { onUnlock: () => void }) {
+  const [password, setPassword] = useState('')
+  const [show, setShow] = useState(false)
+  const [error, setError] = useState(false)
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (password === FINANCE_PASSWORD) {
+      try {
+        sessionStorage.setItem(UNLOCK_KEY, '1')
+      } catch {
+        /* ignora se o navegador bloquear o storage */
+      }
+      onUnlock()
+    } else {
+      setError(true)
+    }
+  }
+
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <Card className="w-full max-w-sm p-6 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-terracota/10 text-terracota">
+          <Lock size={26} strokeWidth={2.2} />
+        </div>
+        <h1 className="mt-4 font-display text-xl font-extrabold text-ink">
+          Área financeira protegida
+        </h1>
+        <p className="mt-1 text-sm text-muted">
+          Digite a senha para acessar os dados financeiros do negócio.
+        </p>
+
+        <form onSubmit={submit} className="mt-5 space-y-3 text-left">
+          <div className="relative">
+            <input
+              type={show ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                setError(false)
+              }}
+              placeholder="Senha"
+              autoFocus
+              className={cx(
+                'w-full rounded-xl border bg-cream px-3 py-2.5 pr-10 text-sm text-ink outline-none focus:ring-2',
+                error
+                  ? 'border-terracota focus:border-terracota focus:ring-terracota/20'
+                  : 'border-edge focus:border-terracota focus:ring-terracota/20'
+              )}
+            />
+            <button
+              type="button"
+              onClick={() => setShow((v) => !v)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1 text-muted hover:bg-ink/5 hover:text-ink"
+              aria-label={show ? 'Ocultar senha' : 'Mostrar senha'}
+            >
+              {show ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+
+          {error && (
+            <p className="text-sm font-medium text-terracota">
+              Senha incorreta. Tente novamente.
+            </p>
+          )}
+
+          <Button type="submit" className="w-full" disabled={!password}>
+            Entrar
+          </Button>
+        </form>
+      </Card>
+    </div>
+  )
+}
+
+export function Financeiro() {
+  const [unlocked, setUnlocked] = useState(() => {
+    try {
+      return sessionStorage.getItem(UNLOCK_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+
+  if (!unlocked) return <FinanceiroLock onUnlock={() => setUnlocked(true)} />
+  return <FinanceiroContent />
 }
