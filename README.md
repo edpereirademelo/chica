@@ -3,6 +3,11 @@
 Protótipo navegável de um sistema de gestão para a **Marmitaria da Chica** ("Sabor Mineiro").
 Feito para demonstração comercial: a **Fase 1 funciona de verdade** (com dados simulados em memória) e as **Fases 2 e 3** aparecem como telas-teaser bonitas.
 
+- 🔗 **App online:** https://chicapp.vercel.app
+- 💻 **Repositório:** https://github.com/edpereirademelo/chica
+
+> Deploy automático: cada `git push` na branch `main` publica a nova versão no Vercel.
+
 ## Como rodar
 
 Pré-requisitos: **Node.js 18+**.
